@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>jQuery UI Tabs - Open on mouseover</title>
+    <title>POIT2023</title>
     <!-- http://jqueryui.com/tabs/#mouseover -->
     <link rel="stylesheet" href="static/jquery-ui.min.css">
     <script src="static/jquery-3.2.1.min.js"></script>
@@ -33,37 +33,15 @@
           width: 300,
           height: 300,
           units: "volaco",
-          minValue: -1,
-          maxValue: 1,
-          majorTicks: [
-              "-1.0",
-              "-0.9",
-              "-0.8",
-              "-0.7",
-              "-0.6",
-              "-0.5",
-              "-0.4",
-              "-0.3",
-              "-0.2",
-              "-0.1",
-              "0",
-              "0.1",
-              "0.2",
-              "0.3",
-              "0.4",
-              "0.5",
-              "0.6",
-              "0.7",
-              "0.8",
-              "0.9",
-              "1.0"
-          ],
+          minValue: 0,
+          maxValue: 4096,
+          majorTicks: 8,
           minorTicks: 4,
           strokeTicks: true,
           highlights: [
               {
-                  "from": 0.8,
-                  "to": 1,
+                  "from": 0,
+                  "to": 700,
                   "color": "rgba(200, 50, 50, .75)"
               }
           ],
@@ -89,11 +67,11 @@
 
       socket.on('my_response', function(msg) {
         console.log(msg.data);
-        $('#log').append('Received #'+msg.count+': '+msg.data+'<br>').html();
+        $('#log').append('> time: '+msg.time+' temperature: '+msg.tmp+' humidity: '+msg.hum+' light: '+msg.lig+'<br>').html();
         
-        x.push(parseFloat(msg.count));
-        y.push(parseFloat(msg.data));
-        y2.push(parseFloat(msg.data2));
+        x.push(parseFloat(msg.time));
+        y.push(parseFloat(msg.tmp));
+        y2.push(parseFloat(msg.hum));
         trace = {
             x: x,
             y: y
@@ -115,7 +93,7 @@
         //console.log(trace);
         Plotly.newPlot($('#plotdiv')[0], [trace, trace2], layout); 
         
-        gauge.value = msg.data; 
+        gauge.value = msg.lig; 
         
         });
 

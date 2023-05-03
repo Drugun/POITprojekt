@@ -7,6 +7,10 @@ import math
 import MySQLdb
 import configparser
 import datetime
+import serial
+
+ser = serial.Serial("/dev/ttyUSB0", 9600)
+ser.baudrate = 9600
 
 async_mode = None
 
@@ -30,38 +34,46 @@ outfile = open(r'./persist.txt',"a+")
 
 def background_thread(args):
     global persistEnabled
-    A = 1
+    #A = 1
     count = 0   
     persistEnabled = False    
-    dataList = []       
+    #dataList = []       
     while True:
-        if args:
-          A = dict(args).get('A')
-        #else:
-          #A = 1 
-        #print A
-        #print args  
-        socketio.sleep(1)
-        count += 1
-        out = float(A)*math.sin(count/10)
-        out2 = float(A)*math.cos(count/10)
-        timenow = int(time.time())
-        dataDict = {
-          "t": time.time(),
-          "x": count,
-          "y": out}
-        dataList.append(dataDict)
-        if(persistEnabled):
-            db = MySQLdb.connect(host=myhost,user=myuser,passwd=mypasswd,db=mydb)
-            cursor = db.cursor()
-            cursor.execute("INSERT INTO prva1 (time, val1, val2) VALUES (%s, %s, %s)",(timenow, out, out2))
-            db.commit()
-            cursor.close()
-            outfile.write(str(timenow) + ";" + str(out) + ";" + str(out2) + "\r\n")
+        #if args:
+        #  A = dict(args).get('A')
+        #socketio.sleep(1)
+        #count += 1
+        #out = float(A)*math.sin(count/10)
+        #out2 = float(A)*math.cos(count/10)
+        x = ser.readline().decode("ascii")
+        print(x)
+        starti = x.find('++')
+        endi = x.find('+', starti)
+        if starti != -1 and endi != -1:
+            n1 = x.find(':')
+            n2 = x.find(';')
+            tmp = float(x[n1+1:n2])
+            n1 = x.find(':', n2)
+            n2 = x.find(';', n2+1)
+            hum = float(x[n1+1:n2])
+            n1 = x.find(':', n2)
+            n2 = x.find('+', n2+1)
+            lig = int(x[n1+1:n2])
+            timenow = int(time.time())
+            #dataDict = {
+            #  "t": time.time(),
+            #  "x": count,
+            #  "y": out}
+            #dataList.append(dataDict)
+            if(persistEnabled):
+                db = MySQLdb.connect(host=myhost,user=myuser,passwd=mypasswd,db=mydb)
+                cursor = db.cursor()
+                cursor.execute("INSERT INTO poit (time, temperature, humidity, light) VALUES (%s, %s, %s, %s)",(timenow, tmp, hum, lig))
+                db.commit()
+                cursor.close()
+                outfile.write(str(timenow) + ";" + str(tmp) + ";" + str(hum) + ";" + str(lig) + "\r\n")
         
-        socketio.emit('my_response',
-                      {'data': out, 'count': count, 'data2': out2},
-                      namespace='/test')  
+            socketio.emit('my_response', {'serial': x, 'time': timenow, 'tmp' : tmp, 'hum' : hum, 'lig' : lig}, namespace='/test')  
 
 @app.route('/')
 def index():
@@ -75,15 +87,18 @@ def readLog():
     res1 = []
     res2 = []
     res3 = []
+    res4 = []
     subres = []
     for line in rows:
         subres = line.split(';')
         res1.append(int(subres[0])) 
         res2.append(float(subres[1]))
         res3.append(float(subres[2]))
+        res4.append(int(subres[3])) 
     res.append(res1)
     res.append(res2)
     res.append(res3)
+    res.append(res4)
     fo.close()
     return render_template('graph.html', data=res)
 
@@ -91,26 +106,30 @@ def readLog():
 def readDB():
     db = MySQLdb.connect(host=myhost,user=myuser,passwd=mypasswd,db=mydb)
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM prva1")
+    cursor.execute("SELECT * FROM poit")
     rows = cursor.fetchall()
     res = []
     res1 = []
     res2 = []
     res3 = []
+    res4 = []
     for line in rows:
         res1.append(int(line[0])) 
         res2.append(float(line[1]))
         res3.append(float(line[2]))
+        res4.append(int(line[3])) 
     res.append(res1)
     res.append(res2)
     res.append(res3)
+    res.append(res4)
     return render_template('graph.html', data=res)
   
 @socketio.on('my_event', namespace='/test')
 def test_message(message):   
-    session['receive_count'] = session.get('receive_count', 0) + 1 
-    session['A'] = message['value']    
-    print("Amplitude set to: " + str(session['A']))
+    #session['receive_count'] = session.get('receive_count', 0) + 1 
+    #session['A'] = message['value']   
+    ser.write(bytes("##RLS#" + str(message['value']) + "#\n"))
+    print("RLS set to: " + str(message['value']))
     #print(message['value'])
     #print(session['A'])
     #emit('my_response', {'data': message['value'], 'count': session['receive_count']})
@@ -134,13 +153,12 @@ def stopPersist():
  
 @socketio.on('disconnect_request', namespace='/test')
 def disconnect_request():
-    session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('my_response',
-         {'data': 'Disconnected!', 'count': session['receive_count']})
+    #session['receive_count'] = session.get('receive_count', 0) + 1
+    #emit('my_response',{'data': 'Disconnected!', 'count': session['receive_count']})
     disconnect()
-    global persistEnabled, outfile
-    outfile.close()
-    persistEnabled = False
+    #global persistEnabled, outfile
+    #outfile.close()
+    #persistEnabled = False
 
 @socketio.on('connect', namespace='/test')
 def test_connect():
@@ -148,7 +166,7 @@ def test_connect():
     with thread_lock:
         if thread is None:
             thread = socketio.start_background_task(target=background_thread, args=session._get_current_object())
-    emit('my_response', {'data': 'Connected', 'count': 0})
+    #emit('my_response', {'data': 'Connected', 'count': 0})
 
 @socketio.on('disconnect', namespace='/test')
 def test_disconnect():
