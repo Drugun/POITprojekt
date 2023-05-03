@@ -1,0 +1,174 @@
+<!doctype html>                                   
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>jQuery UI Tabs - Open on mouseover</title>
+    <!-- http://jqueryui.com/tabs/#mouseover -->
+    <link rel="stylesheet" href="static/jquery-ui.min.css">
+    <script src="static/jquery-3.2.1.min.js"></script>
+    <script src="static/jquery-ui.min.js"></script>
+    <script>
+      $( function() {
+        $( "#tabs" ).tabs({
+          event: "mouseover"
+        });
+      } );
+    </script> 
+    <!--<script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>-->
+   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.5/socket.io.min.js"></script>
+   <script src="static/plotly-latest.min.js"></script>
+   <script src="static/gauge.min.js"></script>
+   <script type="text/javascript" charset="utf-8">
+     $(document).ready(function() {
+       
+      var x = new Array();
+      var y = new Array();
+      var y2 = new Array();
+      var trace;
+      var trace2;
+      var layout;
+      
+      var gauge = new RadialGauge({
+          renderTo: 'canvasID',
+          width: 300,
+          height: 300,
+          units: "volaco",
+          minValue: -1,
+          maxValue: 1,
+          majorTicks: [
+              "-1.0",
+              "-0.9",
+              "-0.8",
+              "-0.7",
+              "-0.6",
+              "-0.5",
+              "-0.4",
+              "-0.3",
+              "-0.2",
+              "-0.1",
+              "0",
+              "0.1",
+              "0.2",
+              "0.3",
+              "0.4",
+              "0.5",
+              "0.6",
+              "0.7",
+              "0.8",
+              "0.9",
+              "1.0"
+          ],
+          minorTicks: 4,
+          strokeTicks: true,
+          highlights: [
+              {
+                  "from": 0.8,
+                  "to": 1,
+                  "color": "rgba(200, 50, 50, .75)"
+              }
+          ],
+          colorPlate: "#fff",
+          borderShadowWidth: 0,
+          borders: false,
+          needleType: "arrow",
+          needleWidth: 2,
+          needleCircleSize: 7,
+          needleCircleOuter: true,
+          needleCircleInner: false,
+          animationDuration: 300,
+          animationRule: "linear"
+      });
+      gauge.draw();
+      gauge.value = "0";
+      
+      namespace = '/test';
+      var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+
+      socket.on('connect', function() {
+        socket.emit('my_event', {data: 'I\'m connected!', value: 1}); });
+
+      socket.on('my_response', function(msg) {
+        console.log(msg.data);
+        $('#log').append('Received #'+msg.count+': '+msg.data+'<br>').html();
+        
+        x.push(parseFloat(msg.count));
+        y.push(parseFloat(msg.data));
+        y2.push(parseFloat(msg.data2));
+        trace = {
+            x: x,
+            y: y
+        };  
+        trace2 = {
+            x: x,
+            y: y2
+        };       
+        layout = {
+          title: 'Data',
+          xaxis: {
+              title: 'x',
+          },
+          yaxis: {
+              title: 'y',
+              //range: [-1,1]
+          }
+        };
+        //console.log(trace);
+        Plotly.newPlot($('#plotdiv')[0], [trace, trace2], layout); 
+        
+        gauge.value = msg.data; 
+        
+        });
+
+      $('form#emit').submit(function(event) {
+          socket.emit('my_event', {value: $('#emit_value').val()});
+          return false; });
+      $('form#disconnect').submit(function(event) {
+          socket.emit('disconnect_request');
+          return false; });         
+      $('form#persistStart').submit(function(event) {
+          socket.emit('persistStart_request');
+          return false; });         
+      $('form#persistStop').submit(function(event) {
+          socket.emit('persistStop_request');
+          return false; });         
+      });
+    </script> 
+  </head>
+  <body>
+   
+    <div id="tabs">
+      <ul>
+        <li><a href="#tabs-1">Home</a></li>
+        <li><a href="#tabs-2">Graf</a></li>
+        <li><a href="#tabs-3">Cifernik</a></li>
+      </ul>
+      <div id="tabs-1">
+        <p>abc</p>
+        <form id="emit" method="POST" action='#'>
+        <input type="text" name="emit_value" id="emit_value" placeholder="Amplituda">
+        <input type="submit" value="Send">
+        </form>
+        <form id="disconnect" method="POST" action="#">
+        <input type="submit" value="Disconnect">
+        </form> 
+        <form id="persistStart" method="POST" action="#">
+        <input type="submit" value="Start persisting">
+        </form> 
+        <form id="persistStop" method="POST" action="#">
+        <input type="submit" value="Stop persisting">
+        </form> 
+        <h2>Receive:</h2>
+        <div id="log"></div>
+      </div>
+      <div id="tabs-2">
+        <p>abc</p>
+        <div id="plotdiv" style="width:800px;height:800px;"></div>
+      </div>
+      <div id="tabs-3">
+        <p>abc</p>
+        <canvas id="canvasID"></canvas>
+      </div>
+    </div>
+ 
+  </body>
+</html>
