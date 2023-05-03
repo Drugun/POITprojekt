@@ -34,17 +34,8 @@ outfile = open(r'./persist.txt',"a+")
 
 def background_thread(args):
     global persistEnabled
-    #A = 1
-    count = 0   
     persistEnabled = False    
-    #dataList = []       
     while True:
-        #if args:
-        #  A = dict(args).get('A')
-        #socketio.sleep(1)
-        #count += 1
-        #out = float(A)*math.sin(count/10)
-        #out2 = float(A)*math.cos(count/10)
         x = ser.readline().decode("ascii").strip()
         print(x)
         starti = x.find('++')
@@ -60,11 +51,6 @@ def background_thread(args):
             n2 = x.find('+', n2+1)
             lig = int(x[n1+1:n2])
             timenow = int(time.time())
-            #dataDict = {
-            #  "t": time.time(),
-            #  "x": count,
-            #  "y": out}
-            #dataList.append(dataDict)
             if(persistEnabled):
                 db = MySQLdb.connect(host=myhost,user=myuser,passwd=mypasswd,db=mydb)
                 cursor = db.cursor()
@@ -126,20 +112,14 @@ def readDB():
   
 @socketio.on('my_event', namespace='/test')
 def test_message(message):   
-    #session['receive_count'] = session.get('receive_count', 0) + 1 
-    #session['A'] = message['value']   
     ser.write(bytes("##GLL#" + str(message['value']) + "#\n", "ascii"))
     print("RLS set to: " + str(message['value']))
-    #print(message['value'])
-    #print(session['A'])
-    #emit('my_response', {'data': message['value'], 'count': session['receive_count']})
     
 @socketio.on('persistStart_request', namespace='/test')
 def startPersist():   
     global persistEnabled, outfile
     outfile.close()
     outfile = open(r'./persist.txt',"a+") 
-    #outfile.write("Session log - " + str(datetime.datetime.now()) + "\r\n")
     persistEnabled = True
     print("Persisting started")
     
@@ -153,12 +133,7 @@ def stopPersist():
  
 @socketio.on('disconnect_request', namespace='/test')
 def disconnect_request():
-    #session['receive_count'] = session.get('receive_count', 0) + 1
-    #emit('my_response',{'data': 'Disconnected!', 'count': session['receive_count']})
     disconnect()
-    #global persistEnabled, outfile
-    #outfile.close()
-    #persistEnabled = False
 
 @socketio.on('connect', namespace='/test')
 def test_connect():
@@ -166,7 +141,6 @@ def test_connect():
     with thread_lock:
         if thread is None:
             thread = socketio.start_background_task(target=background_thread, args=session._get_current_object())
-    #emit('my_response', {'data': 'Connected', 'count': 0})
 
 @socketio.on('disconnect', namespace='/test')
 def test_disconnect():
