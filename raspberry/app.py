@@ -45,7 +45,7 @@ def background_thread(args):
         #count += 1
         #out = float(A)*math.sin(count/10)
         #out2 = float(A)*math.cos(count/10)
-        x = ser.readline().decode("ascii")
+        x = ser.readline().decode("ascii").strip()
         print(x)
         starti = x.find('++')
         endi = x.find('+', starti)
@@ -90,7 +90,7 @@ def readLog():
     res4 = []
     subres = []
     for line in rows:
-        subres = line.split(';')
+        subres = line.strip().split(';')
         res1.append(int(subres[0])) 
         res2.append(float(subres[1]))
         res3.append(float(subres[2]))
@@ -128,7 +128,7 @@ def readDB():
 def test_message(message):   
     #session['receive_count'] = session.get('receive_count', 0) + 1 
     #session['A'] = message['value']   
-    ser.write(bytes("##RLS#" + str(message['value']) + "#\n"))
+    ser.write(bytes("##GLL#" + str(message['value']) + "#\n", "ascii"))
     print("RLS set to: " + str(message['value']))
     #print(message['value'])
     #print(session['A'])
