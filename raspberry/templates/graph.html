@@ -15,43 +15,63 @@
         
     var graphdata = {{ data|tojson }};
     var x = graphdata[0];
-    var y = graphdata[1];
+    var y1 = graphdata[1];
     var y2 = graphdata[2];
-    var trace;
+    var y3 = graphdata[3];
+    var trace1;
     var trace2;
-    var layout;
+    var trace3;
+    var layout1;
+    var layout2;
+    var layout3;
     
     
-    layout = {
-          title: 'Data',
+    layout1 = {
+          title: 'Teplota',
           xaxis: {
-              title: 'x',
+              title: 'cas',
           },
           yaxis: {
-              title: 'y',
+              title: 'teplota',
+              //range: [-1,1]
+          }
+        };
+        layout2 = {
+          title: 'Vlhkost',
+          xaxis: {
+              title: 'cas',
+          },
+          yaxis: {
+              title: 'vlhkost',
+              //range: [-1,1]
+          }
+        };
+        layout3 = {
+          title: 'Svetlo',
+          xaxis: {
+              title: 'cas',
+          },
+          yaxis: {
+              title: 'svetlo',
               //range: [-1,1]
           }
         };
         
-        trace = {
+        trace1 = {
             x: x,
-            y: y
+            y: y1
         };  
         trace2 = {
             x: x,
             y: y2
+        };    
+        trace3 = {
+            x: x,
+            y: y3
         };       
-        layout = {
-          title: 'Data',
-          xaxis: {
-              title: 'x',
-          },
-          yaxis: {
-              title: 'y',
-              //range: [-1,1]
-          }
-        };
-        Plotly.newPlot($('#plotdiv')[0], [trace, trace2], layout);
+        Plotly.newPlot($('#plotdiv1')[0], [trace1], layout1);
+        Plotly.newPlot($('#plotdiv2')[0], [trace2], layout2);
+        Plotly.newPlot($('#plotdiv3')[0], [trace3], layout3);
     
     
     
@@ -64,7 +84,9 @@
 </head>
 <body>
  
-    <div id="plotdiv" style="width:600px;height:600px;"></div>
+    <div id="plotdiv1" style="width:600px;height:600px;"></div>
+    <div id="plotdiv2" style="width:600px;height:600px;"></div>
+    <div id="plotdiv3" style="width:600px;height:600px;"></div>
       
 </body>
 </html> 

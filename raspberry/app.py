@@ -112,8 +112,8 @@ def readDB():
   
 @socketio.on('my_event', namespace='/test')
 def test_message(message):   
-    ser.write(bytes("##GLL#" + str(message['value']) + "#\n", "ascii"))
-    print("RLS set to: " + str(message['value']))
+    ser.write(bytes("##" + str(message['name']) + "#" + str(message['value']) + "#\n", "ascii"))
+    print(str(message['name']) + " set to: " + str(message['value']))
     
 @socketio.on('persistStart_request', namespace='/test')
 def startPersist():   
