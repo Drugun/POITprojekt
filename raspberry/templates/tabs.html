@@ -20,10 +20,12 @@
      $(document).ready(function() {
        
       var x = new Array();
-      var y = new Array();
+      var y1 = new Array();
       var y2 = new Array();
-      var trace;
+      var y3 = new Array();
+      var trace1;
       var trace2;
+      var trace3;
       var layout;
       
       var gauge = new RadialGauge({
@@ -77,27 +79,46 @@
         $('#logSerial').append(msg.serial+'<br>').html();
         
         x.push(parseFloat(msg.time));
-        y.push(parseFloat(msg.tmp));
+        y1.push(parseFloat(msg.tmp));
         y2.push(parseFloat(msg.hum));
-        trace = {
+        y3.push(parseFloat(msg.lig));
+        trace1 = {
             x: x,
-            y: y
+            y: y1,
+            name: 'teplota'
         };  
         trace2 = {
             x: x,
-            y: y2
+            y: y2,
+            name: 'vlhkost'
+        };      
+        trace3 = {
+            x: x,
+            y: y3,
+            name: 'svetlo'
         };       
         layout = {
           title: 'Data',
           xaxis: {
-              title: 'x',
+              title: 'cas (unix)',
           },
           yaxis: {
-              title: 'y',
+              title: 'velicina',
               //range: [-1,1]
           }
         };
-        Plotly.newPlot($('#plotdiv')[0], [trace, trace2], layout); 
+        layout3 = {
+          title: 'Intenzita svetla',
+          xaxis: {
+              title: 'cas (unix)',
+          },
+          yaxis: {
+              title: 'svetlo',
+              //range: [-1,1]
+          }
+        };
+        Plotly.newPlot($('#plotdiv')[0], [trace1, trace2], layout); 
+        Plotly.newPlot($('#plotdivLight')[0], [trace3], layout3); 
         
         gauge.value = msg.lig; 
         
@@ -227,12 +248,13 @@
         <div id="log"></div>
       </div>
       <div id="tabs-2">
-        <p>Graf teploty a vlhkosti</p>
+        <p>Grafy</p>
         <div id="plotdiv" style="width:800px;height:800px;"></div>
       </div>
       <div id="tabs-3">
         <p>Momentalna intenzita svetla</p>
         <canvas id="canvasID"></canvas>
+        <div id="plotdivLight" style="width:800px;height:800px;"></div>
       </div>
       <div id="tabs-4">
         <p>Manualne seriove I/O</p>

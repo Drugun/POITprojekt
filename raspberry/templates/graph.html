@@ -29,7 +29,7 @@
     layout1 = {
           title: 'Teplota',
           xaxis: {
-              title: 'cas',
+              title: 'cas (unix)',
           },
           yaxis: {
               title: 'teplota',
@@ -39,7 +39,7 @@
         layout2 = {
           title: 'Vlhkost',
           xaxis: {
-              title: 'cas',
+              title: 'cas (unix)',
           },
           yaxis: {
               title: 'vlhkost',
@@ -47,9 +47,9 @@
           }
         };
         layout3 = {
-          title: 'Svetlo',
+          title: 'Intenzita svetla',
           xaxis: {
-              title: 'cas',
+              title: 'cas (unix)',
           },
           yaxis: {
               title: 'svetlo',
@@ -59,15 +59,18 @@
         
         trace1 = {
             x: x,
-            y: y1
+            y: y1,
+            name: 'teplota'
         };  
         trace2 = {
             x: x,
-            y: y2
+            y: y2,
+            name: 'vlhkost'
         };    
         trace3 = {
             x: x,
-            y: y3
+            y: y3,
+            name: 'svetlo'
         };       
         Plotly.newPlot($('#plotdiv1')[0], [trace1], layout1);
         Plotly.newPlot($('#plotdiv2')[0], [trace2], layout2);
