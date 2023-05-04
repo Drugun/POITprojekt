@@ -87,11 +87,12 @@ def readLog():
     res4 = []
     subres = []
     for line in rows:
-        subres = line.strip().split(';')
-        res1.append(int(subres[0])) 
-        res2.append(float(subres[1]))
-        res3.append(float(subres[2]))
-        res4.append(int(subres[3])) 
+        if not (line.isspace() or line == ''):
+            subres = line.strip().split(';')
+            res1.append(int(subres[0])) 
+            res2.append(float(subres[1]))
+            res3.append(float(subres[2]))
+            res4.append(int(subres[3])) 
     res.append(res1)
     res.append(res2)
     res.append(res3)
