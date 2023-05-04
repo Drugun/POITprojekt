@@ -67,11 +67,11 @@
       gauge.draw();
       gauge.value = "0";
       
-      namespace = '/test';
+      namespace = '/poit';
       var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
 
 
-      socket.on('my_response', function(msg) {
+      socket.on('sensor_response', function(msg) {
         //console.log(msg.data);
         $('#log').append('> time: '+msg.time+' temperature: '+msg.tmp+' humidity: '+msg.hum+' light: '+msg.lig+'<br>').html();
         $('#logSerial').append(msg.serial+'<br>').html();
@@ -102,22 +102,50 @@
         gauge.value = msg.lig; 
         
         });
+        
+        socket.on('serial_only_response', function(msg) {
+        //console.log(msg.data);
+        $('#logSerial').append(msg.serial+'<br>').html();
+        
+        });
+        
+        socket.on('requested_setting_response', function(msg) {
+        $('#logSerial').append(msg.serial+'<br>').html();
+        alert('Momentalne nastavenie: ' + msg.var)
+        });
 
       $('form#emitRLS').submit(function(event) {
-          socket.emit('my_event', {name:'RLS' ,value: $('#emit_valueRLS').val()});
+          socket.emit('input_request', {name:'RLS', value: $('#emit_valueRLS').val()});
           return false; });
       $('form#emitRLT').submit(function(event) {
-          socket.emit('my_event', {name:'RLT' ,value: $('#emit_valueRLT').val()});
+          socket.emit('input_request', {name:'RLT', value: $('#emit_valueRLT').val()});
           return false; });
       $('form#emitRLH').submit(function(event) {
-          socket.emit('my_event', {name:'RLH' ,value: $('#emit_valueRLH').val()});
+          socket.emit('input_request', {name:'RLH', value: $('#emit_valueRLH').val()});
           return false; });
       $('form#emitGLL').submit(function(event) {
-          socket.emit('my_event', {name:'GLL' ,value: $('#emit_valueGLL').val()});
+          socket.emit('input_request', {name:'GLL', value: $('#emit_valueGLL').val()});
           return false; });
       $('form#emitCFR').submit(function(event) {
-          socket.emit('my_event', {name:'CFR' ,value: $('#emit_valueCFR').val()});
+          socket.emit('input_request', {name:'CFR', value: $('#emit_valueCFR').val()});
           return false; });
+          
+      $('form#emitGetRLS').submit(function(event) {
+          socket.emit('input_request', {name: 'GETVARI', value: 'RLS'});
+          return false; });
+      $('form#emitGetRLT').submit(function(event) {
+          socket.emit('input_request', {name: 'GETVARF', value: 'RLT'});
+          return false; });
+      $('form#emitGetRLH').submit(function(event) {
+          socket.emit('input_request', {name: 'GETVARF', value: 'RLH'});
+          return false; });
+      $('form#emitGetGLL').submit(function(event) {
+          socket.emit('input_request', {name: 'GETVARI', value: 'GLL'});
+          return false; });
+      $('form#emitGetCFR').submit(function(event) {
+          socket.emit('input_request', {name: 'GETVARI', value: 'CFR'});
+          return false; });
+          
       $('form#disconnect').submit(function(event) {
           socket.emit('disconnect_request');
           return false; });         
@@ -128,7 +156,7 @@
           socket.emit('persistStop_request');
           return false; });
       $('form#emitMan').submit(function(event) {
-          socket.emit('my_event', {name: $('#emit_valueMan1').val() ,value: $('#emit_valueMan2').val()});
+          socket.emit('input_request', {name: $('#emit_valueMan1').val() ,value: $('#emit_valueMan2').val()});
           return false; });
           
       });
@@ -150,26 +178,42 @@
         <input type="text" name="emit_valueRLS" id="emit_valueRLS" placeholder="Hodnota">
         <input type="submit" value="Poslat">
         </form>
+        <form id="emitGetRLS" method="POST" action="#">
+        <input type="submit" value="Zistit">
+        </form> 
         <p>Minimalna teplota zapnutia cervenej LED:</p>
         <form id="emitRLT" method="POST" action='#'>
         <input type="text" name="emit_valueRLT" id="emit_valueRLT" placeholder="Hodnota">
         <input type="submit" value="Poslat">
         </form>
+        <form id="emitGetRLT" method="POST" action="#">
+        <input type="submit" value="Zistit">
+        </form> 
         <p>Minimalna vlhkost zapnutia cervenej LED:</p>
         <form id="emitRLH" method="POST" action='#'>
         <input type="text" name="emit_valueRLH" id="emit_valueRLH" placeholder="Hodnota">
         <input type="submit" value="Poslat">
         </form>
+        <form id="emitGetRLH" method="POST" action="#">
+        <input type="submit" value="Zistit">
+        </form> 
         <p>Horna hranica intenzity svetla pre zapnutie zelenej LED:</p>
         <form id="emitGLL" method="POST" action='#'>
         <input type="text" name="emit_valueGLL" id="emit_valueGLL" placeholder="Hodnota">
         <input type="submit" value="Poslat">
         </form>
+        <form id="emitGetGLL" method="POST" action="#">
+        <input type="submit" value="Zistit">
+        </form> 
         <p>Interval medzi meraniami ( x 20ms):</p>
         <form id="emitCFR" method="POST" action='#'>
         <input type="text" name="emit_valueCFR" id="emit_valueCFR" placeholder="Hodnota">
         <input type="submit" value="Poslat">
         </form>
+        <form id="emitGetCFR" method="POST" action="#">
+        <input type="submit" value="Zistit">
+        </form> 
+        <p></p>
         <form id="disconnect" method="POST" action="#">
         <input type="submit" value="Disconnect">
         </form> 

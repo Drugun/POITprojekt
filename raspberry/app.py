@@ -39,27 +39,38 @@ def background_thread(args):
         x = ser.readline().decode("ascii").strip()
         print(x)
         starti = x.find('++')
-        endi = x.find('+', starti)
+        endi = x.find('+', starti+2)
         if starti != -1 and endi != -1:
-            n1 = x.find(':')
-            n2 = x.find(';')
-            tmp = float(x[n1+1:n2])
-            n1 = x.find(':', n2)
-            n2 = x.find(';', n2+1)
-            hum = float(x[n1+1:n2])
-            n1 = x.find(':', n2)
-            n2 = x.find('+', n2+1)
-            lig = int(x[n1+1:n2])
-            timenow = int(time.time())
-            if(persistEnabled):
-                db = MySQLdb.connect(host=myhost,user=myuser,passwd=mypasswd,db=mydb)
-                cursor = db.cursor()
-                cursor.execute("INSERT INTO poit (time, temperature, humidity, light) VALUES (%s, %s, %s, %s)",(timenow, tmp, hum, lig))
-                db.commit()
-                cursor.close()
-                outfile.write(str(timenow) + ";" + str(tmp) + ";" + str(hum) + ";" + str(lig) + "\r\n")
-        
-            socketio.emit('my_response', {'serial': x, 'time': timenow, 'tmp' : tmp, 'hum' : hum, 'lig' : lig}, namespace='/test')  
+            v = x.find('VAR')
+            if v == -1:
+                n1 = x.find(':')
+                n2 = x.find(';')
+                tmp = float(x[n1+1:n2])
+                n1 = x.find(':', n2)
+                n2 = x.find(';', n2+1)
+                hum = float(x[n1+1:n2])
+                n1 = x.find(':', n2)
+                n2 = x.find('+', n2+1)
+                lig = int(x[n1+1:n2])
+                timenow = int(time.time())
+                if(persistEnabled):
+                    db = MySQLdb.connect(host=myhost,user=myuser,passwd=mypasswd,db=mydb)
+                    cursor = db.cursor()
+                    cursor.execute("INSERT INTO poit (time, temperature, humidity, light) VALUES (%s, %s, %s, %s)",(timenow, tmp, hum, lig))
+                    db.commit()
+                    cursor.close()
+                    outfile.write(str(timenow) + ";" + str(tmp) + ";" + str(hum) + ";" + str(lig) + "\r\n")
+                socketio.emit('sensor_response', {'serial': x, 'time': timenow, 'tmp' : tmp, 'hum' : hum, 'lig' : lig}, namespace='/poit')  
+            else:
+                print(v)
+                print(endi)
+                print(x)
+                print(x[v+4:endi])
+                v = v + 4
+                varresp = float(x[v:endi])
+                socketio.emit('requested_setting_response', {'var': varresp, 'serial': x}, namespace='/poit')
+        else:
+            socketio.emit('serial_only_response', {'serial': x}, namespace='/poit')
 
 @app.route('/')
 def index():
@@ -110,12 +121,13 @@ def readDB():
     res.append(res4)
     return render_template('graph.html', data=res)
   
-@socketio.on('my_event', namespace='/test')
-def test_message(message):   
-    ser.write(bytes("##" + str(message['name']) + "#" + str(message['value']) + "#\n", "ascii"))
-    print(str(message['name']) + " set to: " + str(message['value']))
+@socketio.on('input_request', namespace='/poit')
+def serialInputRequest(message):   
+    inp = "##" + str(message['name']) + "#" + str(message['value']) + "#\n"
+    ser.write(bytes(inp, "ascii"))
+    print(inp)
     
-@socketio.on('persistStart_request', namespace='/test')
+@socketio.on('persistStart_request', namespace='/poit')
 def startPersist():   
     global persistEnabled, outfile
     outfile.close()
@@ -123,7 +135,7 @@ def startPersist():
     persistEnabled = True
     print("Persisting started")
     
-@socketio.on('persistStop_request', namespace='/test')
+@socketio.on('persistStop_request', namespace='/poit')
 def stopPersist():   
     global persistEnabled, outfile
     outfile.close()
@@ -131,18 +143,18 @@ def stopPersist():
     print("Persisting stopped")
     
  
-@socketio.on('disconnect_request', namespace='/test')
+@socketio.on('disconnect_request', namespace='/poit')
 def disconnect_request():
     disconnect()
 
-@socketio.on('connect', namespace='/test')
+@socketio.on('connect', namespace='/poit')
 def test_connect():
     global thread
     with thread_lock:
         if thread is None:
             thread = socketio.start_background_task(target=background_thread, args=session._get_current_object())
 
-@socketio.on('disconnect', namespace='/test')
+@socketio.on('disconnect', namespace='/poit')
 def test_disconnect():
     print('Client disconnected', request.sid)
 
